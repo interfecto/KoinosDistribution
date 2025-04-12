@@ -34,7 +34,7 @@
       const query = `
         query GetKoinHoldersPage1 {
           tokenHolders(
-            first: 1000,
+            first: 500,
             filter: { contractId: { equals: "19GYjDBVXU7keLbYvMLazsGQn3GTWHjHkK" } }
             sort: [{ direction: desc, field: balance }]
           ) {
@@ -71,12 +71,12 @@
         const holders = await fetchKoinosData();
         // Sort holders in descending order by balance.
         holders.sort((a, b) => b.balance - a.balance);
-        const topHolders = holders.slice(0, 1000);
+        const topHolders = holders.slice(0, 500);
         const topSum = topHolders.reduce((acc, cur) => acc + cur.balance, 0);
         
         // Hardcoded circulating supply
         const circulatingSupply = 82452065;
-        // Calculate "Others" as circulating supply minus the top 1000 sum.
+        // Calculate "Others" as circulating supply minus the top 500 sum.
         const othersTotal = circulatingSupply > topSum ? circulatingSupply - topSum : 0;
         
         // Build labels: Only label the largest holder as "MEXC", leave the rest blank,
@@ -106,7 +106,7 @@
         }];
         
         const layout = {
-          title: 'KOINOS Token Holder Distribution (Top 1000 + Others)',
+          title: 'KOINOS Token Holder Distribution (Top 500 + Others)',
           paper_bgcolor: "#1e1e1e",
           plot_bgcolor: "#1e1e1e",
           font: { color: "white", size: 14 },
