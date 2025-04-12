@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Koinos Live Token Distribution</title>
+  <!-- Load Plotly from CDN -->
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <style>
+    body {
+      background-color: #1e1e1e;
+      color: white;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 20px;
+    }
+    #chart {
+      width: 100%;
+      max-width: 800px;
+      height: 80vh;
+      margin: auto;
+    }
+    h1 {
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Koinos Token Holder Distribution (Live)</h1>
+  <div id="chart"></div>
+  <script>
+    async function fetchKoinosData() {
+      const endpoint = "https://api.koiner.app/graphql";
+      const query = `
+        query GetKoinHoldersPage1 {
+          tokenHolders(
+            first: 1000,
+            filter: { contractId: { equals: "19GYjDBVXU7keLbYvMLazsGQn3GTWHjHkK" } }
+            sort: [{ direction: desc, field: balance }]
+          ) {
+            edges {
+              node {
+                id
+                addressId
+                balance
+              }
+            }
+            pageInfo {
+              hasNextPage
+              endCursor
+            }
+          }
+        }
+      `;
+      
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query, operationName: "GetKoinHoldersPage1" })
+      });
+      
+      const result = await response.json();
+      return result.data.tokenHolders.edges.map(edge => ({
+        wallet: edge.node.addressId || edge.node.id,
+        balance: parseInt(edge.node.balance, 10) / 1e8
+      }));
+    }
+    
+    async function updateChart() {
+      try {
+        const holders = await fetchKoinosData();
+        // Sort holders in descending order by balance.
+        holders.sort((a, b) => b.balance - a.balance);
+        const topHolders = holders.slice(0, 1000);
+        const topSum = topHolders.reduce((acc, cur) => acc + cur.balance, 0);
+        
+        // Hardcoded circulating supply
+        const circulatingSupply = 82452065;
+        // Calculate "Others" as circulating supply minus the top 1000 sum.
+        const othersTotal = circulatingSupply > topSum ? circulatingSupply - topSum : 0;
+        
+        // Build labels: Only label the largest holder as "MEXC", leave the rest blank,
+        // then add a label for "Others".
+        const labels = topHolders.map((d, index) => index === 0 ? "MEXC" : "");
+        labels.push("Others");
+        
+        // Build values: Balances for the top holders plus the computed "Others" value.
+        const values = topHolders.map(d => d.balance);
+        values.push(othersTotal);
+        
+        // Build custom data for click events.
+        const customData = topHolders.map(holder => holder.wallet);
+        customData.push("");
+        
+        const plotData = [{
+          type: 'pie',
+          labels: labels,
+          values: values,
+          customdata: customData,
+          textinfo: 'none',   // No in-slice text, only hover info.
+          hoverinfo: 'label+value+percent',
+          hole: 0.4,
+          marker: {
+            colors: Plotly.d3.schemeCategory10
+          }
+        }];
+        
+        const layout = {
+          title: 'KOINOS Token Holder Distribution (Top 1000 + Others)',
+          paper_bgcolor: "#1e1e1e",
+          plot_bgcolor: "#1e1e1e",
+          font: { color: "white", size: 14 },
+          showlegend: false
+        };
+        
+        Plotly.newPlot('chart', plotData, layout);
+        
+        // Click event: When a slice is clicked, if wallet data exists, open its page.
+        var chartDiv = document.getElementById('chart');
+        chartDiv.on('plotly_click', function(data){
+          var pt = data.points[0];
+          var wallet = pt.customdata;
+          if(wallet) {
+            var url = "https://koiner.app/addresses/" + wallet;
+            window.open(url, "_blank");
+          }
+        });
+        
+      } catch (error) {
+        console.error("Error fetching or plotting data:", error);
+      }
+    }
+    
+    // Initial load and refresh every 5 minutes (300,000 ms)
+    updateChart();
+    setInterval(updateChart, 300000);
+  </script>
+</body>
+</html>
