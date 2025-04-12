@@ -23,11 +23,28 @@
     h1 {
       margin-bottom: 20px;
     }
+    footer {
+      margin-top: 20px;
+      font-size: 14px;
+    }
+    footer a {
+      color: #00aced;
+      text-decoration: none;
+    }
   </style>
 </head>
 <body>
   <h1>Koinos Token Holder Distribution (Live)</h1>
   <div id="chart"></div>
+  
+  <!-- Footer with Credits -->
+  <footer>
+    <p>
+      Visit <a href="https://koinos.io/" target="_blank">Koinos.io</a> &nbsp;|&nbsp; Powered by the 
+      <a href="https://koiner.app/" target="_blank">Koiner.app API</a>
+    </p>
+  </footer>
+  
   <script>
     async function fetchKoinosData() {
       const endpoint = "https://api.koiner.app/graphql";
@@ -74,7 +91,7 @@
         const topHolders = holders.slice(0, 500);
         const topSum = topHolders.reduce((acc, cur) => acc + cur.balance, 0);
         
-        // Hardcoded circulating supply
+        // Hardcoded circulating supply.
         const circulatingSupply = 82452065;
         // Calculate "Others" as circulating supply minus the top 500 sum.
         const othersTotal = circulatingSupply > topSum ? circulatingSupply - topSum : 0;
@@ -97,7 +114,7 @@
           labels: labels,
           values: values,
           customdata: customData,
-          textinfo: 'none',   // No in-slice text, only hover info.
+          textinfo: 'none',   // No in-slice text; details appear on hover.
           hoverinfo: 'label+value+percent',
           hole: 0.4,
           marker: {
