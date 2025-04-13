@@ -37,15 +37,21 @@
   <h1>Koinos Token Holder Distribution (Live)</h1>
   <div id="chart"></div>
   
-  <!-- Footer with Credits -->
+  <!-- Footer with credits -->
   <footer>
     <p>
-      Visit <a href="https://koinos.io/" target="_blank">Koinos.io</a> &nbsp;|&nbsp; Powered by the 
+      Visit <a href="https://koinos.io/" target="_blank">Koinos.io</a> &nbsp;|&nbsp; Powered by the
       <a href="https://koiner.app/" target="_blank">Koiner.app API</a>
     </p>
   </footer>
   
   <script>
+    // Mapping of special wallet addresses to custom labels.
+    const specialLabels = {
+      "1Kq55nFXNjP8DefaG9vJYqVpNja5ij3j5C": "Chainge Finance",
+      "162GhJwsciDiKsgwzj2t6VoFHt3RMzGKdG": "Koinos Box Mana sharer"
+    };
+
     async function fetchKoinosData() {
       const endpoint = "https://api.koiner.app/graphql";
       const query = `
@@ -93,15 +99,25 @@
         
         // Hardcoded circulating supply.
         const circulatingSupply = 82452065;
-        // Calculate "Others" as circulating supply minus the top 500 sum.
+        // Calculate "Others" as circulating supply minus the sum of the top 500.
         const othersTotal = circulatingSupply > topSum ? circulatingSupply - topSum : 0;
         
-        // Build labels: Only label the largest holder as "MEXC", leave the rest blank,
-        // then add a label for "Others".
-        const labels = topHolders.map((d, index) => index === 0 ? "MEXC" : "");
+        // Build labels:
+        // For each top holder, if there's a custom label in specialLabels, use it.
+        // Else, if it's the largest (index 0), label it "MEXC".
+        // Otherwise, leave it blank.
+        const labels = topHolders.map((d, index) => {
+          if(specialLabels[d.wallet]) {
+            return specialLabels[d.wallet];
+          } else if(index === 0) {
+            return "MEXC";
+          } else {
+            return "";
+          }
+        });
         labels.push("Others");
         
-        // Build values: Balances for the top holders plus the computed "Others" value.
+        // Build values: balances for the top holders plus the computed "Others" value.
         const values = topHolders.map(d => d.balance);
         values.push(othersTotal);
         
@@ -132,7 +148,7 @@
         
         Plotly.newPlot('chart', plotData, layout);
         
-        // Click event: When a slice is clicked, if wallet data exists, open its page.
+        // Click event: When a slice is clicked, if wallet data exists, open its page on Koiner App.
         var chartDiv = document.getElementById('chart');
         chartDiv.on('plotly_click', function(data){
           var pt = data.points[0];
