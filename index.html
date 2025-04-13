@@ -99,13 +99,11 @@
         
         // Hardcoded circulating supply.
         const circulatingSupply = 82452065;
-        // Calculate "Others" as circulating supply minus the sum of the top 500.
+        // Calculate "Others/Burned" as circulating supply minus the sum of the top 500.
         const othersTotal = circulatingSupply > topSum ? circulatingSupply - topSum : 0;
         
         // Build labels:
-        // For each top holder, if there's a custom label in specialLabels, use it.
-        // Else, if it's the largest (index 0), label it "MEXC".
-        // Otherwise, leave it blank.
+        // Use a custom label if defined; else for the largest, label "MEXC", else blank.
         const labels = topHolders.map((d, index) => {
           if(specialLabels[d.wallet]) {
             return specialLabels[d.wallet];
@@ -115,13 +113,14 @@
             return "";
           }
         });
-        labels.push("Others");
+        // Set aggregated slice label to "Others/Burned"
+        labels.push("Others/Burned");
         
-        // Build values: balances for the top holders plus the computed "Others" value.
+        // Build values: balances for the top holders plus the computed others value.
         const values = topHolders.map(d => d.balance);
         values.push(othersTotal);
         
-        // Build custom data for click events.
+        // Custom data for click events.
         const customData = topHolders.map(holder => holder.wallet);
         customData.push("");
         
@@ -130,7 +129,7 @@
           labels: labels,
           values: values,
           customdata: customData,
-          textinfo: 'none',   // No in-slice text; details appear on hover.
+          textinfo: 'none',   // No in-slice text; use hover info.
           hoverinfo: 'label+value+percent',
           hole: 0.4,
           marker: {
@@ -139,18 +138,29 @@
         }];
         
         const layout = {
-          title: 'KOINOS Token Holder Distribution (Top 500 + Others)',
+          title: 'KOINOS Token Holder Distribution (Top 500)',
           paper_bgcolor: "#1e1e1e",
           plot_bgcolor: "#1e1e1e",
           font: { color: "white", size: 14 },
-          showlegend: false
+          showlegend: false,
+          annotations: [
+            {
+              x: 0.5,
+              y: -0.1,
+              xref: "paper",
+              yref: "paper",
+              text: "Claimed Koin: 75,77% | Total accounts: 19.026",
+              showarrow: false,
+              font: { size: 14, color: "white" }
+            }
+          ]
         };
         
         Plotly.newPlot('chart', plotData, layout);
         
-        // Click event: When a slice is clicked, if wallet data exists, open its page on Koiner App.
-        var chartDiv = document.getElementById('chart');
-        chartDiv.on('plotly_click', function(data){
+        // Click event: open wallet page on Koiner.app.
+        const chartDiv = document.getElementById('chart');
+        chartDiv.on('plotly_click', function(data) {
           var pt = data.points[0];
           var wallet = pt.customdata;
           if(wallet) {
