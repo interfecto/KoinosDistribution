@@ -1,87 +1,97 @@
 <!DOCTYPE html>
-<html>
+<html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Koinos & VHP Live Token Distribution</title>
-  <!-- Load Plotly from CDN -->
+  <title>KOIN & VHP Distribution – Hard Facts</title>
   <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   <style>
-    body {
-      background-color: #1e1e1e;
-      color: white;
-      font-family: Arial, sans-serif;
-      text-align: center;
-      margin: 0;
+    /* Modern Dark Mode with a clean layout */
+    body { 
+      background: linear-gradient(135deg, #121212, #1e1e1e); 
+      color: #e0e0e0; 
+      font-family: 'Roboto', sans-serif; 
+      text-align: center; 
+      margin: 0; 
       padding: 20px;
     }
-    .chart {
-      width: 100%;
-      max-width: 800px;
-      height: 80vh;
-      margin: auto;
-      margin-bottom: 10px;
+    h1 { 
+      font-size: 1.8em; 
+      margin-bottom: 10px; 
+      color: #fff;
     }
-    .sum {
-      font-size: 16px;
-      margin-bottom: 40px;
+    .chart { 
+      width: 100%; 
+      max-width: 800px; 
+      height: 70vh; 
+      margin: 20px auto; 
+      border: 1px solid #333; 
+      box-shadow: 0 0 10px rgba(0,0,0,0.8);
+      background-color: #1e1e1e;
     }
-    h1 {
-      margin-bottom: 20px;
+    .info { 
+      font-size: 14px; 
+      margin-top: 10px; 
+      max-width: 800px; 
+      margin: 10px auto; 
+      background-color: #222; 
+      padding: 10px; 
+      border-radius: 4px;
+      text-align: left;
     }
-    footer {
-      margin-top: 20px;
-      font-size: 14px;
+    footer { 
+      margin-top: 30px; 
+      font-size: 14px; 
+      color: #aaa;
     }
-    footer a {
-      color: #00aced;
+    footer a { 
+      color: #00aced; 
       text-decoration: none;
     }
   </style>
 </head>
 <body>
   <!-- KOIN Chart Section -->
-  <h1>Koinos Token Holder Distribution (Live)</h1>
+  <h1>KOIN Distribution (Top 500)</h1>
   <div id="chartKoin" class="chart"></div>
-  <p id="sumKOIN" class="sum"></p>
+  <div id="koinSummary" class="info"></div>
   
   <!-- VHP Chart Section -->
-  <h1>VHP Token Holder Distribution (Live)</h1>
+  <h1>VHP All (Top 500)</h1>
   <div id="chartVHP" class="chart"></div>
-  <p id="sumVHP" class="sum"></p>
+  <div id="sumVHP" class="info"></div>
   
-  <!-- Total Sum Calculation Section -->
-  <h1>Total Sum Calculation</h1>
-  <p id="sumTotal" class="sum"></p>
-  
-  <!-- Footer with credits -->
-  <footer>
-    <p>
-      Visit <a href="https://koinos.io/" target="_blank">Koinos.io</a>
-      | Powered by the <a href="https://koiner.app/" target="_blank">Koiner.app API</a>
-    </p>
-  </footer>
+  <!-- Supply Data from Koiner App -->
+  <div id="suppliesInfo" class="info"></div>
   
   <script>
-    // Global variables to hold sum totals.
-    let sumKoinos = 0;
-    let sumVHP = 0;
-
-    // Function to update the overall total sum.
-    function updateTotalSum() {
-      const unclaimed = 25000000; // Approximately 25 million unclaimed tokens.
-      const total = sumKoinos + sumVHP + unclaimed;
-      document.getElementById("sumTotal").innerText =
-        "Total Sum (KOIN + VHP + Unclaimed 25M): " + total.toLocaleString(undefined, { maximumFractionDigits: 2 });
+    let suppliesData = null, sumKoin500 = 0, sumVHP = 0;
+    
+    // Fetch supply data from Koiner App Checker API
+    async function fetchSupplies() {
+      try {
+        const res = await fetch("https://checker.koiner.app/koin/supplies?useDecimals=true");
+        suppliesData = await res.json();
+        // Real KOIN in accounts: claimed minus VHP-converted
+        const realKoin = suppliesData.claimed - suppliesData.vhp;
+        document.getElementById("suppliesInfo").innerHTML = `<strong>Supplies (Koiner App):</strong><br>
+          KOIN Circulating: ${suppliesData.koin.toLocaleString(undefined, {maximumFractionDigits:2})}<br>
+          VHP Circulating: ${suppliesData.vhp.toLocaleString(undefined, {maximumFractionDigits:2})}<br>
+          Claimed: ${suppliesData.claimed.toLocaleString(undefined, {maximumFractionDigits:2})}<br>
+          Unclaimed: ${suppliesData.outstanding.toLocaleString(undefined, {maximumFractionDigits:2})}<br>
+          Snapshot: ${suppliesData.snapshot.toLocaleString(undefined, {maximumFractionDigits:2})}<br>
+          Real KOIN in Accounts (Claimed − VHP): ${realKoin.toLocaleString(undefined, {maximumFractionDigits:2})}
+        `;
+      } catch (e) {
+        console.error("Supplies Error:", e);
+      }
     }
-
-    // Mapping of special wallet addresses to custom labels for KOIN.
-    const specialLabels = {
+    
+    // Hardcoded labels for KOIN and VHP
+    const koinLabels = {
       "1Kq55nFXNjP8DefaG9vJYqVpNja5ij3j5C": "Chainge Finance",
       "162GhJwsciDiKsgwzj2t6VoFHt3RMzGKdG": "Koinos Box Mana sharer"
     };
-
-    // Hardcoded labels for VHP wallet addresses based on your clean dataset.
-    const vhpSpecialLabels = {
+    const vhpLabels = {
       "1EPZaqve43k9Jq5mNeT2ydCjUiytTTU4U": "Koinos Group Fogata BP",
       "1MbsVfNw6yzQqA8499d8KQj8qdLyRs8CzW": "JGA Pool #2",
       "1NsQbH5AhQXgtSNg1ejpFqTi2hmCWz1eQS": "BurnKoin",
@@ -90,138 +100,113 @@
       "1KfD7n93LnnihyygopWUVTkbtWVe5aXXGW": "Koinos en español",
       "1932QKYoPzaGmwBxTnnYhNqV9LQi2sYLHT": "Suspicious Mainnet Pool"
     };
-
-    // ---------------- KOIN CHART CODE ----------------
+    
+    // KOIN Chart – Top 500 breakdown into:
+    // • Top 500 = sum from tokenHolders query,
+    // • Others Claimed = (Real KOIN in Accounts) − (Sum Top 500),
+    // • Unclaimed = supplies.outstanding.
     async function fetchKoinosData() {
-      const endpoint = "https://api.koiner.app/graphql";
-      const query = `
-        query GetKoinHoldersPage1 {
+      const q = `
+        query {
           tokenHolders(
             first: 500,
-            filter: { contractId: { equals: "19GYjDBVXU7keLbYvMLazsGQn3GTWHjHkK" } }
+            filter: { contractId: { equals: "19GYjDBVXU7keLbYvMLazsGQn3GTWHjHkK" } },
             sort: [{ direction: desc, field: balance }]
           ) {
-            edges {
-              node {
-                addressId
-                balance
-              }
-            }
-            pageInfo {
-              hasNextPage
-              endCursor
-            }
+            edges { node { addressId balance } }
           }
         }
       `;
-      const response = await fetch(endpoint, {
+      const res = await fetch("https://api.koiner.app/graphql", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query, operationName: "GetKoinHoldersPage1" })
+        body: JSON.stringify({ query: q })
       });
-      const result = await response.json();
-      console.log("KOIN data received:", result);
-      return result.data.tokenHolders.edges.map(edge => ({
-        wallet: edge.node.addressId || "",
-        balance: parseInt(edge.node.balance, 10) / 1e8
+      const json = await res.json();
+      return json.data.tokenHolders.edges.map(e => ({
+        wallet: e.node.addressId,
+        balance: parseInt(e.node.balance, 10) / 1e8
       }));
     }
-
+    
     async function updateKoinosChart() {
       try {
         const holders = await fetchKoinosData();
         holders.sort((a, b) => b.balance - a.balance);
         const topHolders = holders.slice(0, 500);
-        const topSum = topHolders.reduce((acc, cur) => acc + cur.balance, 0);
-        sumKoinos = topSum;
-        const circulatingSupply = 82452065;
-        const othersTotal = circulatingSupply > topSum ? circulatingSupply - topSum : 0;
-        const labels = topHolders.map((d, index) => {
-          if (specialLabels[d.wallet]) return specialLabels[d.wallet];
-          if (index === 0) return "MEXC";
+        const sumTop500 = topHolders.reduce((acc, cur) => acc + cur.balance, 0);
+        // Calculate real KOIN in accounts = claimed − vhp
+        const realKoin = suppliesData ? (suppliesData.claimed - suppliesData.vhp) : 0;
+        // Others Claimed = (Real KOIN in Accounts) − (Top 500)
+        const othersClaimed = realKoin > sumTop500 ? realKoin - sumTop500 : 0;
+        const unclaimed = suppliesData ? suppliesData.outstanding : 0;
+        
+        const labels = topHolders.map((d, i) => {
+          if (koinLabels[d.wallet]) return koinLabels[d.wallet];
+          if (i === 0 && !koinLabels[d.wallet]) return "MEXC";
           return "";
         });
-        labels.push("Others/Burned");
+        labels.push("Others Claimed", "Unclaimed");
+        
         const values = topHolders.map(d => d.balance);
-        values.push(othersTotal);
-        const customData = topHolders.map(d => d.wallet);
-        customData.push("");
-        const plotData = [{
-          type: 'pie',
+        values.push(othersClaimed, unclaimed);
+        
+        const data = [{
+          type: "pie",
           labels: labels,
           values: values,
-          customdata: customData,
-          textinfo: 'none',
-          hoverinfo: 'label+value+percent',
+          customdata: topHolders.map(d => d.wallet).concat(["",""]),
+          textinfo: "none",
+          hoverinfo: "label+value+percent",
           hole: 0.4,
           marker: { colors: Plotly.d3.schemeCategory10 }
         }];
+        
         const layout = {
-          title: 'KOINOS Token Holder Distribution (Top 500)',
           paper_bgcolor: "#1e1e1e",
           plot_bgcolor: "#1e1e1e",
           font: { color: "white", size: 14 },
-          showlegend: false,
-          annotations: [{
-            x: 0.5,
-            y: -0.1,
-            xref: "paper",
-            yref: "paper",
-            text: "Claimed Koin: 75,77% | Total accounts: 19.026",
-            showarrow: false,
-            font: { size: 14, color: "white" }
-          }]
+          showlegend: false
         };
-        Plotly.newPlot('chartKoin', plotData, layout);
-        document.getElementById("sumKOIN").innerText =
-          "Sum of top 500 KOIN holders: " + topSum.toLocaleString(undefined, { maximumFractionDigits: 2 });
-        document.getElementById('chartKoin').on('plotly_click', function(data) {
-          const pt = data.points[0];
-          const wallet = pt.customdata;
+        
+        Plotly.newPlot("chartKoin", data, layout);
+        document.getElementById("koinSummary").innerHTML = `<strong>KOIN Breakdown:</strong><br>
+          Top 500: ${sumTop500.toLocaleString(undefined, {maximumFractionDigits:2})}<br>
+          Top 500 + Unclaimed: ${(sumTop500 + unclaimed).toLocaleString(undefined, {maximumFractionDigits:2})}<br>
+          Total (Real KOIN + Unclaimed): ${suppliesData ? (realKoin + unclaimed).toLocaleString(undefined, {maximumFractionDigits:2}) : "N/A"}
+        `;
+        // Add click handler to redirect to Koiner App pages
+        document.getElementById("chartKoin").on("plotly_click", function(data) {
+          var wallet = data.points[0].customdata;
           if (wallet) window.open("https://koiner.app/addresses/" + wallet, "_blank");
         });
-        updateTotalSum();
-      } catch (error) {
-        console.error("Error updating KOIN chart:", error);
-      }
+      } catch(e) { console.error("KOIN Chart Error:", e); }
     }
-
-    // ---------------- VHP CHART CODE ----------------
+    
+    // VHP Chart (Top 500)
     async function fetchVhpData() {
-      const endpoint = "https://api.koiner.app/graphql";
-      const query = `
-        query GetVhpHolders {
+      const q = `
+        query {
           tokenHolders(
             first: 500,
-            filter: { contractId: { equals: "12Y5vW6gk8GceH53YfRkRre2Rrcsgw7Naq" } }
+            filter: { contractId: { equals: "12Y5vW6gk8GceH53YfRkRre2Rrcsgw7Naq" } },
             sort: [{ direction: desc, field: balance }]
           ) {
-            edges {
-              node {
-                addressId
-                balance
-              }
-            }
-            pageInfo {
-              hasNextPage
-              endCursor
-            }
+            edges { node { addressId balance } }
           }
         }
       `;
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query, operationName: "GetVhpHolders" })
+      const res = await fetch("https://api.koiner.app/graphql", {
+        method:"POST", headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ query: q })
       });
-      const result = await response.json();
-      console.log("VHP data received:", result);
-      return result.data.tokenHolders.edges.map(edge => ({
-        wallet: edge.node.addressId || "",
-        balance: parseInt(edge.node.balance, 10) / 1e8
+      const json = await res.json();
+      return json.data.tokenHolders.edges.map(e => ({
+        wallet: e.node.addressId,
+        balance: parseInt(e.node.balance, 10) / 1e8
       }));
     }
-
+    
     async function updateVhpChart() {
       try {
         const holders = await fetchVhpData();
@@ -229,63 +214,51 @@
         const topHolders = holders.slice(0, 500);
         const topSum = topHolders.reduce((acc, cur) => acc + cur.balance, 0);
         sumVHP = topSum;
-        const circulatingSupply = 12345678;
-        const othersTotal = circulatingSupply > topSum ? circulatingSupply - topSum : 0;
-        // Build labels for VHP chart using the hardcoded mapping.
-        const labels = topHolders.map(d => {
-          if (vhpSpecialLabels[d.wallet]) return vhpSpecialLabels[d.wallet];
-          return "";
-        });
+        const vhpSupply = suppliesData ? suppliesData.vhp : 12345678;
+        const othersTotal = vhpSupply > topSum ? vhpSupply - topSum : 0;
+        const labels = topHolders.map(d => vhpLabels[d.wallet] || "");
         labels.push("Others/Burned");
         const values = topHolders.map(d => d.balance);
         values.push(othersTotal);
-        const customData = topHolders.map(d => d.wallet);
-        customData.push("");
-        const plotData = [{
-          type: 'pie',
+        const data = [{
+          type: "pie",
           labels: labels,
           values: values,
-          customdata: customData,
-          textinfo: 'none',
-          hoverinfo: 'label+value+percent',
+          customdata: topHolders.map(d => d.wallet).concat([""]),
+          textinfo: "none",
+          hoverinfo: "label+value+percent",
           hole: 0.4,
           marker: { colors: Plotly.d3.schemeCategory10 }
         }];
         const layout = {
-          title: 'VHP Distribution (Top 500)',
           paper_bgcolor: "#1e1e1e",
           plot_bgcolor: "#1e1e1e",
           font: { color: "white", size: 14 },
           showlegend: false,
           annotations: [{
-            x: 0.5,
-            y: -0.1,
-            xref: "paper",
-            yref: "paper",
-            text: "VHP Distribution",
-            showarrow: false,
-            font: { size: 14, color: "white" }
+            x: 0.5, y: -0.1, xref:"paper", yref:"paper",
+            text:"VHP All", showarrow:false, font:{ size:14, color:"white" }
           }]
         };
-        Plotly.newPlot('chartVHP', plotData, layout);
-        document.getElementById("sumVHP").innerText =
-          "Sum VHP: " + topSum.toLocaleString(undefined, { maximumFractionDigits: 2 });
-        document.getElementById('chartVHP').on('plotly_click', function(data) {
-          const pt = data.points[0];
-          const wallet = pt.customdata;
+        Plotly.newPlot("chartVHP", data, layout);
+        document.getElementById("sumVHP").innerText = "Sum VHP: " + topSum.toLocaleString(undefined, {maximumFractionDigits:2});
+        document.getElementById("chartVHP").on("plotly_click", function(data) {
+          var wallet = data.points[0].customdata;
           if (wallet) window.open("https://koiner.app/addresses/" + wallet, "_blank");
         });
-        updateTotalSum();
-      } catch (error) {
-        console.error("Error updating VHP chart:", error);
-      }
+      } catch(e) { console.error("VHP Chart Error:", e); }
     }
-
-    // ---------------- INITIALIZE BOTH CHARTS & AUTO-REFRESH ----------------
-    updateKoinosChart();
-    updateVhpChart();
-    setInterval(updateKoinosChart, 300000);
-    setInterval(updateVhpChart, 300000);
+    
+    async function initCharts() {
+      await fetchSupplies();
+      updateKoinosChart();
+      updateVhpChart();
+      setInterval(updateKoinosChart, 300000);
+      setInterval(updateVhpChart, 300000);
+      setInterval(fetchSupplies, 300000);
+    }
+    
+    initCharts();
   </script>
 </body>
 </html>
