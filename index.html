@@ -60,8 +60,20 @@
   <div id="chartVHP" class="chart"></div>
   <div id="sumVHP" class="info"></div>
   
-  <!-- Supply Data from Koiner App -->
+  <!-- Total Sum (using Snapshot) -->
+  <h1>Total Sum</h1>
+  <div id="sumTotal" class="info"></div>
+  
+  <!-- Supply Data (from Koiner App) -->
   <div id="suppliesInfo" class="info"></div>
+  
+  <!-- Footer with Credits -->
+  <footer>
+    <p>
+      Data from <a href="https://koiner.app/" target="_blank">Koiner.app API</a> Take a look at  
+      <a href="https://koinos.io/" target="_blank">Koinos.io</a>
+    </p>
+  </footer>
   
   <script>
     let suppliesData = null, sumKoin500 = 0, sumVHP = 0;
@@ -71,19 +83,27 @@
       try {
         const res = await fetch("https://checker.koiner.app/koin/supplies?useDecimals=true");
         suppliesData = await res.json();
-        // Real KOIN in accounts: claimed minus VHP-converted
+        // Real KOIN in Accounts = claimed - vhp (i.e. tokens that remain as KOIN)
         const realKoin = suppliesData.claimed - suppliesData.vhp;
         document.getElementById("suppliesInfo").innerHTML = `<strong>Supplies (Koiner App):</strong><br>
-          KOIN Circulating: ${suppliesData.koin.toLocaleString(undefined, {maximumFractionDigits:2})}<br>
-          VHP Circulating: ${suppliesData.vhp.toLocaleString(undefined, {maximumFractionDigits:2})}<br>
-          Claimed: ${suppliesData.claimed.toLocaleString(undefined, {maximumFractionDigits:2})}<br>
-          Unclaimed: ${suppliesData.outstanding.toLocaleString(undefined, {maximumFractionDigits:2})}<br>
-          Snapshot: ${suppliesData.snapshot.toLocaleString(undefined, {maximumFractionDigits:2})}<br>
-          Real KOIN in Accounts (Claimed − VHP): ${realKoin.toLocaleString(undefined, {maximumFractionDigits:2})}
+          KOIN Circulating: ${suppliesData.koin.toLocaleString(undefined, { maximumFractionDigits: 2 })}<br>
+          VHP Circulating: ${suppliesData.vhp.toLocaleString(undefined, { maximumFractionDigits: 2 })}<br>
+          Claimed: ${suppliesData.claimed.toLocaleString(undefined, { maximumFractionDigits: 2 })}<br>
+          Unclaimed: ${suppliesData.outstanding.toLocaleString(undefined, { maximumFractionDigits: 2 })}<br>
+          Snapshot: ${suppliesData.snapshot.toLocaleString(undefined, { maximumFractionDigits: 2 })}<br>
+          Real KOIN in Accounts (Claimed − VHP): ${realKoin.toLocaleString(undefined, { maximumFractionDigits: 2 })}
         `;
+        updateTotalSum();
       } catch (e) {
         console.error("Supplies Error:", e);
       }
+    }
+    
+    // Total Sum is defined as Snapshot (full genesis allocation)
+    function updateTotalSum() {
+      if (!suppliesData) return;
+      document.getElementById("sumTotal").innerText = 
+        "Total Sum (Snapshot): " + suppliesData.snapshot.toLocaleString(undefined, { maximumFractionDigits: 2 });
     }
     
     // Hardcoded labels for KOIN and VHP
@@ -101,10 +121,10 @@
       "1932QKYoPzaGmwBxTnnYhNqV9LQi2sYLHT": "Suspicious Mainnet Pool"
     };
     
-    // KOIN Chart – Top 500 breakdown into:
-    // • Top 500 = sum from tokenHolders query,
-    // • Others Claimed = (Real KOIN in Accounts) − (Sum Top 500),
-    // • Unclaimed = supplies.outstanding.
+    // KOIN Chart – Top 500 breakdown:
+    // - Top 500 = Sum of tokenHolders (visible KOIN)
+    // - Others Claimed = (Real KOIN in Accounts) - (Sum Top 500)
+    // - Unclaimed = supplies.outstanding
     async function fetchKoinosData() {
       const q = `
         query {
@@ -135,9 +155,9 @@
         holders.sort((a, b) => b.balance - a.balance);
         const topHolders = holders.slice(0, 500);
         const sumTop500 = topHolders.reduce((acc, cur) => acc + cur.balance, 0);
-        // Calculate real KOIN in accounts = claimed − vhp
+        // Real KOIN in accounts = claimed − vhp
         const realKoin = suppliesData ? (suppliesData.claimed - suppliesData.vhp) : 0;
-        // Others Claimed = (Real KOIN in Accounts) − (Top 500)
+        // Others Claimed: those not in top 500
         const othersClaimed = realKoin > sumTop500 ? realKoin - sumTop500 : 0;
         const unclaimed = suppliesData ? suppliesData.outstanding : 0;
         
@@ -155,7 +175,7 @@
           type: "pie",
           labels: labels,
           values: values,
-          customdata: topHolders.map(d => d.wallet).concat(["",""]),
+          customdata: topHolders.map(d => d.wallet).concat(["", ""]),
           textinfo: "none",
           hoverinfo: "label+value+percent",
           hole: 0.4,
@@ -171,16 +191,15 @@
         
         Plotly.newPlot("chartKoin", data, layout);
         document.getElementById("koinSummary").innerHTML = `<strong>KOIN Breakdown:</strong><br>
-          Top 500: ${sumTop500.toLocaleString(undefined, {maximumFractionDigits:2})}<br>
-          Top 500 + Unclaimed: ${(sumTop500 + unclaimed).toLocaleString(undefined, {maximumFractionDigits:2})}<br>
-          Total (Real KOIN + Unclaimed): ${suppliesData ? (realKoin + unclaimed).toLocaleString(undefined, {maximumFractionDigits:2}) : "N/A"}
+          Top 500: ${sumTop500.toLocaleString(undefined, { maximumFractionDigits: 2 })}<br>
+          Top 500 + Unclaimed: ${(sumTop500 + unclaimed).toLocaleString(undefined, { maximumFractionDigits: 2 })}<br>
+          Total (Real KOIN + Unclaimed): ${suppliesData ? (realKoin + unclaimed).toLocaleString(undefined, { maximumFractionDigits: 2 }) : "N/A"}
         `;
-        // Add click handler to redirect to Koiner App pages
         document.getElementById("chartKoin").on("plotly_click", function(data) {
           var wallet = data.points[0].customdata;
           if (wallet) window.open("https://koiner.app/addresses/" + wallet, "_blank");
         });
-      } catch(e) { console.error("KOIN Chart Error:", e); }
+      } catch (e) { console.error("KOIN Chart Error:", e); }
     }
     
     // VHP Chart (Top 500)
@@ -197,7 +216,8 @@
         }
       `;
       const res = await fetch("https://api.koiner.app/graphql", {
-        method:"POST", headers: {"Content-Type": "application/json"},
+        method:"POST", 
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ query: q })
       });
       const json = await res.json();
@@ -241,12 +261,12 @@
           }]
         };
         Plotly.newPlot("chartVHP", data, layout);
-        document.getElementById("sumVHP").innerText = "Sum VHP: " + topSum.toLocaleString(undefined, {maximumFractionDigits:2});
+        document.getElementById("sumVHP").innerText = "Sum VHP: " + topSum.toLocaleString(undefined, { maximumFractionDigits: 2 });
         document.getElementById("chartVHP").on("plotly_click", function(data) {
           var wallet = data.points[0].customdata;
           if (wallet) window.open("https://koiner.app/addresses/" + wallet, "_blank");
         });
-      } catch(e) { console.error("VHP Chart Error:", e); }
+      } catch (e) { console.error("VHP Chart Error:", e); }
     }
     
     async function initCharts() {
