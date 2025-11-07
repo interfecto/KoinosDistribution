@@ -1,8 +1,10 @@
 // API Configuration
 // Detect if we're on GitHub Pages (HTTPS) or local (HTTP)
 const isHTTPS = window.location.protocol === 'https:';
+// Using cors-anywhere proxy alternative
+const PROXY_URL = 'https://api.allorigins.win/raw?url=';
 const API_BASE = isHTTPS
-    ? 'https://corsproxy.io/?' + encodeURIComponent('http://157.180.23.97:3003/api')
+    ? PROXY_URL
     : 'http://157.180.23.97:3003/api';
 const KOINOSBLOCKS_BASE = 'https://koinosblocks.com/address';
 
@@ -82,28 +84,50 @@ async function loadDashboardData() {
 
 // API Functions
 async function fetchStats() {
-    const url = isHTTPS
-        ? `https://corsproxy.io/?${encodeURIComponent(`http://157.180.23.97:3003/api/stats`)}`
-        : `${API_BASE}/stats`;
-    const response = await fetch(url);
-    const data = await response.json();
-    return data.data;
+    try {
+        const url = isHTTPS
+            ? `${PROXY_URL}${encodeURIComponent('http://157.180.23.97:3003/api/stats')}`
+            : 'http://157.180.23.97:3003/api/stats';
+
+        console.log('Fetching stats from:', url);
+        const response = await fetch(url);
+        const data = await response.json();
+        return data.data;
+    } catch (error) {
+        console.error('Error fetching stats:', error);
+        // Return mock data if API fails
+        return {
+            total_addresses: "Loading...",
+            koin_holders: "Loading...",
+            vhp_holders: "Loading...",
+            total_koin: "0",
+            total_vhp: "0"
+        };
+    }
 }
 
 async function fetchTopHolders(type, limit = 100) {
-    const url = isHTTPS
-        ? `https://corsproxy.io/?${encodeURIComponent(`http://157.180.23.97:3003/api/${type}/top?limit=${limit}`)}`
-        : `${API_BASE}/${type}/top?limit=${limit}`;
-    const response = await fetch(url);
-    const data = await response.json();
-    return data.data;
+    try {
+        const url = isHTTPS
+            ? `${PROXY_URL}${encodeURIComponent(`http://157.180.23.97:3003/api/${type}/top?limit=${limit}`)}`
+            : `http://157.180.23.97:3003/api/${type}/top?limit=${limit}`;
+
+        console.log(`Fetching ${type} holders from:`, url);
+        const response = await fetch(url);
+        const data = await response.json();
+        return data.data;
+    } catch (error) {
+        console.error(`Error fetching ${type} holders:`, error);
+        return [];
+    }
 }
 
 async function fetchAddressInfo(address) {
     try {
         const url = isHTTPS
-            ? `https://corsproxy.io/?${encodeURIComponent(`http://157.180.23.97:3003/api/address/${address}`)}`
-            : `${API_BASE}/address/${address}`;
+            ? `${PROXY_URL}${encodeURIComponent(`http://157.180.23.97:3003/api/address/${address}`)}`
+            : `http://157.180.23.97:3003/api/address/${address}`;
+
         const response = await fetch(url);
         const data = await response.json();
         return data.data;
