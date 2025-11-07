@@ -1,5 +1,9 @@
 // API Configuration
-const API_BASE = 'http://157.180.23.97:3003/api';
+// Detect if we're on GitHub Pages (HTTPS) or local (HTTP)
+const isHTTPS = window.location.protocol === 'https:';
+const API_BASE = isHTTPS
+    ? 'https://corsproxy.io/?' + encodeURIComponent('http://157.180.23.97:3003/api')
+    : 'http://157.180.23.97:3003/api';
 const KOINOSBLOCKS_BASE = 'https://koinosblocks.com/address';
 
 // Global data storage
@@ -78,20 +82,29 @@ async function loadDashboardData() {
 
 // API Functions
 async function fetchStats() {
-    const response = await fetch(`${API_BASE}/stats`);
+    const url = isHTTPS
+        ? `https://corsproxy.io/?${encodeURIComponent(`http://157.180.23.97:3003/api/stats`)}`
+        : `${API_BASE}/stats`;
+    const response = await fetch(url);
     const data = await response.json();
     return data.data;
 }
 
 async function fetchTopHolders(type, limit = 100) {
-    const response = await fetch(`${API_BASE}/${type}/top?limit=${limit}`);
+    const url = isHTTPS
+        ? `https://corsproxy.io/?${encodeURIComponent(`http://157.180.23.97:3003/api/${type}/top?limit=${limit}`)}`
+        : `${API_BASE}/${type}/top?limit=${limit}`;
+    const response = await fetch(url);
     const data = await response.json();
     return data.data;
 }
 
 async function fetchAddressInfo(address) {
     try {
-        const response = await fetch(`${API_BASE}/address/${address}`);
+        const url = isHTTPS
+            ? `https://corsproxy.io/?${encodeURIComponent(`http://157.180.23.97:3003/api/address/${address}`)}`
+            : `${API_BASE}/address/${address}`;
+        const response = await fetch(url);
         const data = await response.json();
         return data.data;
     } catch (error) {
