@@ -48,11 +48,11 @@ async function loadDashboardData() {
         // Show loading spinner
         showLoading(true);
 
-        // Fetch all data in parallel with 200 wallets
+        // Fetch all data in parallel with 250 wallets
         const [statsData, koinData, vhpData] = await Promise.all([
             fetchStats(),
-            fetchTopHolders('koin', 200),
-            fetchTopHolders('vhp', 200)
+            fetchTopHolders('koin', 250),
+            fetchTopHolders('vhp', 250)
         ]);
 
         // Store data globally
@@ -94,7 +94,7 @@ async function fetchStats() {
     }
 }
 
-async function fetchTopHolders(type, limit = 200) {
+async function fetchTopHolders(type, limit = 250) {
     try {
         const response = await fetch(`${API_BASE}/${type}/top?limit=${limit}`);
         const data = await response.json();
@@ -159,7 +159,7 @@ function updateTable(tableId, holders, totalSupply) {
     const tbody = document.getElementById(tableId);
     tbody.innerHTML = '';
 
-    holders.slice(0, 50).forEach((holder, index) => {
+    holders.slice(0, 100).forEach((holder, index) => {
         const balance = parseFloat(holder.balance);
         const percentage = ((balance / totalSupply) * 100).toFixed(2);
 
@@ -201,18 +201,18 @@ function createPieChart(canvasId, holders, title, color) {
         globalData.charts[canvasId].destroy();
     }
 
-    // Prepare data for top 30 holders + others
-    const top30 = holders.slice(0, 30);
-    const othersBalance = holders.slice(30).reduce((sum, h) => sum + parseFloat(h.balance), 0);
+    // Prepare data for top 50 holders + others
+    const top50 = holders.slice(0, 50);
+    const othersBalance = holders.slice(50).reduce((sum, h) => sum + parseFloat(h.balance), 0);
 
     const data = {
-        labels: [...top30.map((h, i) => getAddressLabel(h.address, i)), 'Others'],
+        labels: [...top50.map((h, i) => getAddressLabel(h.address, i)), 'Others'],
         datasets: [{
-            data: [...top30.map(h => parseFloat(h.balance)), othersBalance],
-            backgroundColor: generateGradientColors(31, color),
+            data: [...top50.map(h => parseFloat(h.balance)), othersBalance],
+            backgroundColor: generateGradientColors(51, color),
             borderColor: 'rgba(255, 255, 255, 0.2)',
             borderWidth: 1,
-            addresses: [...top30.map(h => h.address), null] // Store actual addresses for reference
+            addresses: [...top50.map(h => h.address), null] // Store actual addresses for reference
         }]
     };
 
@@ -288,7 +288,7 @@ function createPieChart(canvasId, holders, title, color) {
             onClick: (event, elements) => {
                 if (elements.length > 0) {
                     const index = elements[0].index;
-                    if (index < 30) {
+                    if (index < 50) {
                         const address = holders[index].address;
                         showWalletDetails(address);
                     }
