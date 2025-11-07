@@ -1,5 +1,5 @@
 // API Configuration
-const API_BASE = 'https://157.180.23.97:3003/api';
+const API_BASE = 'https://157-180-23-97.nip.io/api';
 const KOINOSBLOCKS_BASE = 'https://koinosblocks.com/address';
 
 // Global data storage
