@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Koinos Distribution Dashboard</title>
-    <link rel="stylesheet" href="styles.css?v=5.0">
+    <link rel="stylesheet" href="styles.css?v=6.0">
     <!-- Chart.js for beautiful charts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Chart.js datalabels plugin for better labels -->
@@ -34,6 +34,16 @@
 
     <!-- Main Container -->
     <div class="container">
+        <!-- Disclaimer Banner -->
+        <div class="disclaimer-banner">
+            <div class="disclaimer-icon">⚠️</div>
+            <div class="disclaimer-content">
+                <strong>Disclaimer:</strong> The data displayed on this dashboard may be inaccurate or outdated.
+                Token balances and distribution information are fetched from third-party sources and should not be used for financial decisions.
+                Always verify information through official sources before making any decisions.
+            </div>
+        </div>
+
         <!-- Overview Section -->
         <section id="overview" class="section">
             <h2 class="section-title">Network Overview</h2>
@@ -184,7 +194,8 @@
     <!-- Footer -->
     <footer class="footer">
         <p>Data provided by Koinos API | <a href="https://koinosblocks.com" target="_blank">View on KoinosBlocks</a></p>
-        <p>Last updated: <span id="last-updated">-</span></p>
+        <p>Last updated: <span id="last-updated">-</span> | Data refreshes every 60 seconds</p>
+        <p class="footer-disclaimer">⚠️ This dashboard is for informational purposes only. Data accuracy is not guaranteed.</p>
     </footer>
 
     <!-- Modal for wallet details -->

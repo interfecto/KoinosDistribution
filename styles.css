@@ -112,6 +112,37 @@ body {
     padding: 2rem;
 }
 
+/* Disclaimer Banner */
+.disclaimer-banner {
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    animation: fadeIn 0.6s ease;
+}
+
+.disclaimer-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.disclaimer-content {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    font-size: 0.9rem;
+}
+
+.disclaimer-content strong {
+    color: rgba(245, 158, 11, 1);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
 /* Sections */
 .section {
     margin-bottom: 3rem;
@@ -457,6 +488,13 @@ body {
 
 .footer a:hover {
     text-decoration: underline;
+}
+
+.footer-disclaimer {
+    margin-top: 1rem;
+    color: rgba(245, 158, 11, 0.8);
+    font-size: 0.875rem;
+    font-weight: 500;
 }
 
 /* Responsive Design */
