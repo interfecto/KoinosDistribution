@@ -209,9 +209,10 @@ body {
     border: 1px solid var(--border-color);
     position: relative;
     width: 100%;
-    max-width: 800px;
-    height: 600px;
+    max-width: 1000px;
+    height: 500px;
     box-shadow: 0 10px 30px rgba(107, 70, 193, 0.1);
+    overflow: hidden;
 }
 
 .chart-wrapper.large {

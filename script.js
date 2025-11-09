@@ -201,18 +201,18 @@ function createPieChart(canvasId, holders, title, color) {
         globalData.charts[canvasId].destroy();
     }
 
-    // Prepare data for top 50 holders + others
-    const top50 = holders.slice(0, 50);
-    const othersBalance = holders.slice(50).reduce((sum, h) => sum + parseFloat(h.balance), 0);
+    // Prepare data for top 20 holders for cleaner display + others
+    const top20 = holders.slice(0, 20);
+    const othersBalance = holders.slice(20).reduce((sum, h) => sum + parseFloat(h.balance), 0);
 
     const data = {
-        labels: [...top50.map((h, i) => getAddressLabel(h.address, i)), 'Others'],
+        labels: [...top20.map((h, i) => getAddressLabel(h.address, i)), 'Others'],
         datasets: [{
-            data: [...top50.map(h => parseFloat(h.balance)), othersBalance],
-            backgroundColor: generateGradientColors(51, color),
+            data: [...top20.map(h => parseFloat(h.balance)), othersBalance],
+            backgroundColor: generateGradientColors(21, color),
             borderColor: 'rgba(255, 255, 255, 0.2)',
             borderWidth: 1,
-            addresses: [...top50.map(h => h.address), null] // Store actual addresses for reference
+            addresses: [...top20.map(h => h.address), null] // Store actual addresses for reference
         }]
     };
 
@@ -223,6 +223,14 @@ function createPieChart(canvasId, holders, title, color) {
             responsive: true,
             maintainAspectRatio: false,
             cutout: '40%',
+            layout: {
+                padding: {
+                    left: 20,
+                    right: 250,
+                    top: 20,
+                    bottom: 20
+                }
+            },
             elements: {
                 arc: {
                     borderColor: 'rgba(255, 255, 255, 0.2)',
@@ -235,18 +243,21 @@ function createPieChart(canvasId, holders, title, color) {
                 },
                 legend: {
                     position: 'right',
+                    align: 'start',
                     labels: {
                         color: '#FFFFFF',
-                        padding: 10,
+                        padding: 8,
                         font: {
-                            size: 14,
+                            size: 11,
                             family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-                            weight: '500'
+                            weight: '400'
                         },
                         usePointStyle: false,
-                        boxWidth: 15,
-                        boxHeight: 15
-                    }
+                        boxWidth: 12,
+                        boxHeight: 12
+                    },
+                    maxHeight: 500,
+                    maxWidth: 200
                 },
                 title: {
                     display: true,
@@ -288,7 +299,7 @@ function createPieChart(canvasId, holders, title, color) {
             onClick: (event, elements) => {
                 if (elements.length > 0) {
                     const index = elements[0].index;
-                    if (index < 50) {
+                    if (index < 20) {
                         const address = holders[index].address;
                         showWalletDetails(address);
                     }
